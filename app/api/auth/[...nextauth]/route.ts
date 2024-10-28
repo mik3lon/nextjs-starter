@@ -1,6 +1,8 @@
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import {CustomJWT, CustomSession} from "@/types/next-auth";
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import { CustomJWT, CustomSession } from "@/types/next-auth";
+
+const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || '';
 
 const handler = NextAuth({
     providers: [
@@ -11,14 +13,12 @@ const handler = NextAuth({
         }),
     ],
     callbacks: {
-        async jwt({ token, account }) {
-            // If this is the initial login, get the id_token from the provider
-            if (account?.id_token) {
-                token.idToken = account.id_token;
+        async signIn({ account, profile }) {
+            if (account?.provider && account.id_token) {
+                const providerSigninUrl = `${BACKEND_BASE_URL}/users/social/signin/${account.provider}`;
 
                 try {
-                    // Request the JWT from your backend using the id_token
-                    const response = await fetch("https://your-backend.com/api/auth/jwt", {
+                    const response = await fetch(providerSigninUrl, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -27,19 +27,32 @@ const handler = NextAuth({
                     });
 
                     if (response.ok) {
+                        // Extract and store tokens in the account object to access in the jwt callback
                         const { access_token, refresh_token, ttl, refresh_ttl } = await response.json();
-                        token.accessToken = access_token;
-                        token.refreshToken = refresh_token;
-                        token.ttl = ttl;
-                        token.refreshTtl = refresh_ttl;
+                        account.access_token = access_token;
+                        account.refresh_token = refresh_token;
+                        account.ttl = ttl;
+                        account.refresh_ttl = refresh_ttl;
+                        return true; // Continue with sign-in
                     } else {
-                        console.error("Failed to retrieve JWT from backend");
+                        console.error("Backend authentication failed.");
+                        return "/error?error=auth_failed"; // Redirect to error page
                     }
                 } catch (error) {
-                    console.error("Error requesting JWT:", error);
+                    console.error("Error contacting backend:", error);
+                    return "/error?error=auth_failed"; // Redirect to error page
                 }
             }
-
+            return true; // Continue if no backend call is needed
+        },
+        async jwt({ token, account }) {
+            if (account?.access_token) {
+                // Store backend tokens in the JWT if available
+                token.accessToken = account.access_token;
+                token.refreshToken = account.refresh_token;
+                token.ttl = account.ttl;
+                token.refreshTtl = account.refresh_ttl;
+            }
             return token;
         },
         async session({ session, token }) {
@@ -56,6 +69,10 @@ const handler = NextAuth({
         },
     },
     secret: process.env.NEXTAUTH_SECRET,
-})
+    pages: {
+        signIn: "/login",
+        error: "/error",
+    },
+});
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };

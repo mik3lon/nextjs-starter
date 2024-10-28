@@ -1,16 +1,19 @@
-// app/dashboard/page.tsx
-"use client";
+import ECommerce from "@/components/Dashboard/E-commerce";
+import { Metadata } from "next";
+import DefaultLayout from "@/components/Layouts/DefaultLayout";
 
-import { useSession } from "next-auth/react";
+export const metadata: Metadata = {
+  title:
+    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
+  description: "This is Next.js Home for TailAdmin Dashboard Template",
+};
 
-export default function Dashboard() {
-    const { data: session } = useSession();
-
-    return (
-        <div>
-            <h1>Welcome, {session?.user?.name}</h1>
-            <p>Email: {session?.user?.email}</p>
-            <p>ID Token: {session?.idToken}</p>
-        </div>
-    );
+export default function Home() {
+  return (
+    <>
+      <DefaultLayout>
+        <ECommerce />
+      </DefaultLayout>
+    </>
+  );
 }
