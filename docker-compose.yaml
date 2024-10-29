@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  mockoon:
+    image: mockoon/cli
+    container_name: mockoon-server
+    volumes:
+      - ./mockoon_data:/data
+    command: "--data /data/backend.json --port 8000"
+    ports:
+      - "8000:8000"

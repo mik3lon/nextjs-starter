@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { CustomJWT, CustomSession } from "@/types/next-auth";
+import {CustomJWT, CustomSession} from "@/types/next-auth";
 
 const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || '';
 
@@ -13,7 +13,7 @@ const handler = NextAuth({
         }),
     ],
     callbacks: {
-        async signIn({ account, profile }) {
+        async signIn({account}) {
             if (account?.provider && account.id_token) {
                 const providerSigninUrl = `${BACKEND_BASE_URL}/users/social/signin/${account.provider}`;
 
@@ -23,12 +23,12 @@ const handler = NextAuth({
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ id_token: account.id_token }),
+                        body: JSON.stringify({id_token: account.id_token}),
                     });
 
                     if (response.ok) {
                         // Extract and store tokens in the account object to access in the jwt callback
-                        const { access_token, refresh_token, ttl, refresh_ttl } = await response.json();
+                        const {access_token, refresh_token, ttl, refresh_ttl} = await response.json();
                         account.access_token = access_token;
                         account.refresh_token = refresh_token;
                         account.ttl = ttl;
@@ -45,7 +45,7 @@ const handler = NextAuth({
             }
             return true; // Continue if no backend call is needed
         },
-        async jwt({ token, account }) {
+        async jwt({token, account}) {
             if (account?.access_token) {
                 // Store backend tokens in the JWT if available
                 token.accessToken = account.access_token;
@@ -55,7 +55,7 @@ const handler = NextAuth({
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({session, token}) {
             const customSession = session as CustomSession; // Type session as CustomSession
             const customToken = token as CustomJWT; // Type token as CustomJWT
 
@@ -70,9 +70,9 @@ const handler = NextAuth({
     },
     secret: process.env.NEXTAUTH_SECRET,
     pages: {
-        signIn: "/login",
+        signIn: "/auth/signin",
         error: "/error",
     },
 });
 
-export { handler as GET, handler as POST };
+export {handler as GET, handler as POST};

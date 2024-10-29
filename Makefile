@@ -1,7 +1,7 @@
 # Makefile for Next.js Project
 
 # Variables
-DOCKER_COMPOSE_FILE := docker-compose.yml
+DOCKER_COMPOSE_FILE := docker-compose.yaml
 NEXT_APP_DIR := .
 PORT := 3000
 
