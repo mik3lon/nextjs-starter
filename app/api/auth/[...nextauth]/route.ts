@@ -1,15 +1,20 @@
-import NextAuth from "next-auth";
+import NextAuth, {NextAuthOptions} from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import {CustomJWT, CustomSession} from "@/types/next-auth";
 
 const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || '';
 
-const handler = NextAuth({
+export const authOptions : NextAuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || '',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
             idToken: true,
+            authorization: {
+                params: {
+                    scope: "openid profile email", // Request specific scopes from Google
+                },
+            },
         }),
     ],
     callbacks: {
@@ -28,11 +33,12 @@ const handler = NextAuth({
 
                     if (response.ok) {
                         // Extract and store tokens in the account object to access in the jwt callback
-                        const {access_token, refresh_token, ttl, refresh_ttl} = await response.json();
+                        const {access_token, refresh_token, access_token_ttl, refresh_token_ttl} = await response.json();
+
                         account.access_token = access_token;
                         account.refresh_token = refresh_token;
-                        account.ttl = ttl;
-                        account.refresh_ttl = refresh_ttl;
+                        account.ttl = access_token_ttl;
+                        account.refresh_ttl = refresh_token_ttl;
                         return true; // Continue with sign-in
                     } else {
                         console.error("Backend authentication failed.");
@@ -73,6 +79,9 @@ const handler = NextAuth({
         signIn: "/auth/signin",
         error: "/error",
     },
-});
+}
+
+
+const handler = NextAuth(authOptions);
 
 export {handler as GET, handler as POST};

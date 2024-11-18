@@ -54,25 +54,8 @@ update:
 	@echo "Updating dependencies..."
 	npm update
 
-# Docker-related commands
-docker-up:
-	@echo "Starting Docker containers..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d
-
-docker-down:
-	@echo "Stopping Docker containers..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) down
-
-docker-build:
-	@echo "Building Docker containers..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up --build -d
-
-docker-logs:
-	@echo "Viewing Docker container logs..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f
-
 # Utility commands
 rebuild: clean install build
 	@echo "Cleaned, installed, and rebuilt the project."
 
-.PHONY: help start build start-prod lint test clean install update docker-up docker-down docker-build docker-logs rebuild
+.PHONY: help start build start-prod lint test clean install update rebuild
