@@ -1,10 +1,11 @@
-import NextAuth, {NextAuthOptions} from "next-auth";
+import NextAuth, {Account, NextAuthOptions} from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import {CustomJWT, CustomSession} from "@/types/next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import {CustomJWT, CustomSession} from "@/types/session";
 
 const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || '';
 
-export const authOptions : NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -16,9 +17,59 @@ export const authOptions : NextAuthOptions = {
                 },
             },
         }),
+        CredentialsProvider({
+            name: "credentials",
+            credentials: {
+                email: { label: "Email", type: "email", placeholder: "you@example.com" },
+                password: { label: "Password", type: "password" },
+            },
+            async authorize(credentials: Record<"email" | "password", string> | undefined) {
+                if (!credentials) {
+                    throw new Error("No credentials provided");
+                }
+
+                const { email, password } = credentials;
+
+                try {
+                    const response = await fetch(`${BACKEND_BASE_URL}/users/auth/signin`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Basic ${btoa(`${email}:${password}`)}`, // Add Basic Auth header
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Invalid credentials");
+                    }
+
+                    const {
+                        id, // Ensure this is provided by the backend
+                        email: returnedEmail,
+                        access_token,
+                        refresh_token,
+                        access_token_ttl,
+                        refresh_token_ttl,
+                    } = await response.json();
+
+                    // Return an object matching the User interface
+                    return {
+                        id, // Required field
+                        email: returnedEmail, // Ensure this is consistent with your backend
+                        access_token,
+                        refresh_token,
+                        ttl: access_token_ttl,
+                        refresh_ttl: refresh_token_ttl,
+                    };
+                } catch (error) {
+                    console.error("Login error:", error);
+                    throw new Error("Invalid credentials");
+                }
+            },
+        }),
     ],
     callbacks: {
-        async signIn({account}) {
+        async signIn({ account }: { account: Account | null }) { // Explicitly typing account
             if (account?.provider && account.id_token) {
                 const providerSigninUrl = `${BACKEND_BASE_URL}/users/social/signin/${account.provider}`;
 
@@ -33,7 +84,12 @@ export const authOptions : NextAuthOptions = {
 
                     if (response.ok) {
                         // Extract and store tokens in the account object to access in the jwt callback
-                        const {access_token, refresh_token, access_token_ttl, refresh_token_ttl} = await response.json();
+                        const {
+                            access_token,
+                            refresh_token,
+                            access_token_ttl,
+                            refresh_token_ttl
+                        } = await response.json();
 
                         account.access_token = access_token;
                         account.refresh_token = refresh_token;
@@ -51,13 +107,13 @@ export const authOptions : NextAuthOptions = {
             }
             return true; // Continue if no backend call is needed
         },
-        async jwt({token, account}) {
-            if (account?.access_token) {
+        async jwt({token, account, user}) {
+            if (account?.access_token || user?.access_token) {
                 // Store backend tokens in the JWT if available
-                token.accessToken = account.access_token;
-                token.refreshToken = account.refresh_token;
-                token.ttl = account.ttl;
-                token.refreshTtl = account.refresh_ttl;
+                token.accessToken = account?.access_token || user?.access_token;
+                token.refreshToken = account?.refresh_token || user?.refresh_token;
+                token.ttl = account?.ttl || user?.ttl;
+                token.refreshTtl = account?.refresh_ttl || user?.refresh_ttl;
             }
             return token;
         },

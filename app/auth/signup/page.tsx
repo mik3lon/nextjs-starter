@@ -1,11 +1,31 @@
 'use client'
 
-import React from "react";
-import { signIn } from "next-auth/react";
+import React, {FormEvent, useState} from "react";
 import EmptyLayout from "@/components/Layouts/EmptyLayout";
 import Link from "next/link";
+import {signUp} from "@/app/actions/user/sign-up";
+import toast from "react-hot-toast";
+import {signIn} from "next-auth/react";
 
 const SignUp: React.FC = () => {
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setLoading(true);
+
+        const formData = new FormData(event.currentTarget);
+
+        try {
+            await signUp(formData);
+            setLoading(false);
+            toast.success("Account created successfully! See your email for activate the account!");
+        } catch (err: any) {
+            toast.error(err.message || "Failed to sign up.");
+            setLoading(false);
+        }
+    };
+
     return (
         <EmptyLayout>
             <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -23,15 +43,20 @@ const SignUp: React.FC = () => {
 
                 <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                     <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                        <form className="space-y-6" action="#" method="POST">
+                        <form className="space-y-6" onSubmit={handleSubmit}>
                             <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                                     Name
                                 </label>
                                 <div className="mt-1">
-                                    <input id="name" name="name" type="text" required
-                                           className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                           placeholder="Enter your name"/>
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="Enter your name"
+                                    />
                                 </div>
                             </div>
 
@@ -40,9 +65,14 @@ const SignUp: React.FC = () => {
                                     Email address
                                 </label>
                                 <div className="mt-1">
-                                    <input id="email" name="email" type="email" required
-                                           className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                           placeholder="Enter your email address"/>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="Enter your email address"
+                                    />
                                 </div>
                             </div>
 
@@ -51,9 +81,14 @@ const SignUp: React.FC = () => {
                                     Password
                                 </label>
                                 <div className="mt-1">
-                                    <input id="password" name="password" type="password" required
-                                           className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                           placeholder="Enter your password"/>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="Enter your password"
+                                    />
                                 </div>
                             </div>
 
@@ -62,16 +97,26 @@ const SignUp: React.FC = () => {
                                     Repeat Password
                                 </label>
                                 <div className="mt-1">
-                                    <input id="repeat_password" name="repeat_password" type="password" required
-                                           className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                           placeholder="Repeat your password"/>
+                                    <input
+                                        id="repeat_password"
+                                        name="repeat_password"
+                                        type="password"
+                                        required
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="Repeat your password"
+                                    />
                                 </div>
                             </div>
 
                             <div>
-                                <button type="submit"
-                                        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Sign up
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                                        loading ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-700"
+                                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                                >
+                                    {loading ? "Signing up..." : "Sign up"}
                                 </button>
                             </div>
                         </form>

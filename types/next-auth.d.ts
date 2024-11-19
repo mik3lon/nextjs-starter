@@ -1,19 +1,10 @@
-// types/session.d.ts
-import { DefaultSession } from "next-auth";
+import "next-auth";
 
-// Define and export the custom session type
-export interface CustomSession extends DefaultSession {
-    accessToken?: string;
-    refreshToken?: string;
-    ttl?: number;
-    refreshTtl?: number;
-}
-
-// Define and export the custom JWT type
-export interface CustomJWT {
-    idToken?: string;
-    accessToken?: string;
-    refreshToken?: string;
-    ttl?: number;
-    refreshTtl?: number;
+declare module "next-auth" {
+    interface User {
+        access_token?: string;
+        refresh_token?: string;
+        ttl?: number;
+        refresh_ttl?: number;
+    }
 }
