@@ -63,7 +63,6 @@ export const authOptions: NextAuthOptions = {
                         refresh_ttl: refresh_token_ttl,
                     };
                 } catch (error) {
-                    console.error("Login error:", error);
                     throw new Error("Invalid credentials");
                 }
             },
@@ -98,8 +97,7 @@ export const authOptions: NextAuthOptions = {
                         account.refresh_ttl = refresh_token_ttl;
                         return true; // Continue with sign-in
                     } else {
-                        console.error("Backend authentication failed.");
-                        console.error("Response", response);
+                        console.error("Backend authentication failed.", response);
                         return "/error?error=auth_failed"; // Redirect to error page
                     }
                 } catch (error) {
@@ -125,7 +123,6 @@ export const authOptions: NextAuthOptions = {
                     const response = await me(account.access_token);
 
                     token.userProfile = response.data;
-                    console.log("USERPROFILE", response.data)
                 } catch (error) {
                     console.error("Failed to fetch user profile:", error);
                 }
@@ -147,8 +144,6 @@ export const authOptions: NextAuthOptions = {
             if (customToken.userProfile) {
                 customSession.userProfile = customToken.userProfile; // Ensure `CustomSession` is updated with `userProfile`
             }
-
-            console.log("CUSTOM SESSION", customSession)
 
             return customSession;
         },
