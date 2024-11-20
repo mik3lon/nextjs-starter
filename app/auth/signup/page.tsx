@@ -3,7 +3,7 @@
 import React, {FormEvent, useState} from "react";
 import EmptyLayout from "@/components/Layouts/EmptyLayout";
 import Link from "next/link";
-import {signUp} from "@/app/actions/user/sign-up";
+import {signUp} from "@/actions/user/sign-up";
 import toast from "react-hot-toast";
 import {signIn} from "next-auth/react";
 

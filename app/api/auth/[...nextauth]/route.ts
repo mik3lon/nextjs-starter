@@ -2,6 +2,7 @@ import NextAuth, {Account, NextAuthOptions} from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {CustomJWT, CustomSession} from "@/types/session";
+import {me} from "@/actions/user/me";
 
 const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || '';
 
@@ -98,6 +99,7 @@ export const authOptions: NextAuthOptions = {
                         return true; // Continue with sign-in
                     } else {
                         console.error("Backend authentication failed.");
+                        console.error("Response", response);
                         return "/error?error=auth_failed"; // Redirect to error page
                     }
                 } catch (error) {
@@ -108,6 +110,7 @@ export const authOptions: NextAuthOptions = {
             return true; // Continue if no backend call is needed
         },
         async jwt({token, account, user}) {
+            // Attach tokens if available
             if (account?.access_token || user?.access_token) {
                 // Store backend tokens in the JWT if available
                 token.accessToken = account?.access_token || user?.access_token;
@@ -115,6 +118,19 @@ export const authOptions: NextAuthOptions = {
                 token.ttl = account?.ttl || user?.ttl;
                 token.refreshTtl = account?.refresh_ttl || user?.refresh_ttl;
             }
+
+            // Fetch the user profile using the `me` function if accessToken exists
+            if (account?.access_token) {
+                try {
+                    const response = await me(account.access_token);
+
+                    token.userProfile = response.data;
+                    console.log("USERPROFILE", response.data)
+                } catch (error) {
+                    console.error("Failed to fetch user profile:", error);
+                }
+            }
+
             return token;
         },
         async session({session, token}) {
@@ -126,6 +142,13 @@ export const authOptions: NextAuthOptions = {
             customSession.refreshToken = customToken.refreshToken;
             customSession.ttl = customToken.ttl;
             customSession.refreshTtl = customToken.refreshTtl;
+
+            // Attach the user profile
+            if (customToken.userProfile) {
+                customSession.userProfile = customToken.userProfile; // Ensure `CustomSession` is updated with `userProfile`
+            }
+
+            console.log("CUSTOM SESSION", customSession)
 
             return customSession;
         },

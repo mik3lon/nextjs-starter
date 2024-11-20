@@ -7,6 +7,17 @@ export interface CustomSession extends DefaultSession {
     refreshToken?: string;
     ttl?: number;
     refreshTtl?: number;
+    userProfile?: {
+        id: string;
+        username: string;
+        email: string;
+        name: string;
+        surname: string;
+        role: string;
+        profile_picture_url: string;
+        createdAt: string;
+        updatedAt: string;
+    };
 }
 
 // Define and export the custom JWT type
@@ -16,4 +27,15 @@ export interface CustomJWT extends DefaultJWT {
     refreshToken?: string;
     ttl?: number;
     refreshTtl?: number;
+    userProfile?: {
+        id: string;
+        username: string;
+        email: string;
+        name: string;
+        surname: string;
+        role: string;
+        profile_picture_url: string;
+        createdAt: string;
+        updatedAt: string;
+    };
 }
